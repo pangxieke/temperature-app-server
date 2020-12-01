@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+  app:
+    image: registry.cn-shenzhen.aliyuncs.com/yunzhimeng/temperature:2019121602
+    environment:
+      - "GO_ENV=development" # test | production
+      - "MYSQL_HOST="
+      - "MYSQL_PORT=3306"
+      - "MYSQL_USER="
+      - "MYSQL_PASSWORD="
+      - "MYSQL_DB="
+      - "OSS_ENDPOINT="
+      - "OSS_ACCESS_KEY_ID="
+      - "OSS_ACCESS_KEY_SECRET="
+      - "OSS_BUCKET="
+      - "BAIDU_HOST="
+      - "BAIDU_APP_ID="
+      - "BAIDU_APP_KEY="
+      - "SMS_ACCOUNT="
+      - "SMS_PASSWORD="
+      - "REDIS_ADDRESS=127.0.0.1:7001,127.0.0.1:7002"
+    volumes:
+      - /data/logs/temperature:/var/log
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - 20806:8080
+networks:
+  default:
+    external:
+      name: test_default

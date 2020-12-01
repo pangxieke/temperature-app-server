@@ -1,0 +1,507 @@
+openapi: "3.0.9"
+info:
+  title: 测温设备Api及H5用户信息
+  description: |
+    版本：v1.1
+
+    ### 流程图
+
+    ![](./temperature_flow.png)
+
+    #### 命名风格
+
+    JSON 字段采用`小驼峰`风格，URL 采用`下划线分隔`风格
+
+    #### 参数
+
+    参数分`Query Parameter` 和 `Request Body` 两种，前者主要用于 GET 请求，以URL Query Parameter 格式传入；后者主要用于POST, PUT, PATCH 请求，以 JSON 格式传入 BODY 里。
+
+    #### 响应
+
+    响应分两部分：HTTP 状态码、BODY。状态码符合HTTP协议标准，BODY 通常使用JSON格式。
+
+    请求成功的情况下使用的状态码有：
+
+    | 状态码 | 说明   |
+    | ------ | ------ |
+    | 200    | 成功   |
+    | 201    | 已创建 |
+    | 204    | 无内容 |
+
+    失败的状态码使用了：
+
+    | 状态码 | 说明                     |
+    | ------ | ------------------------ |
+    | 400    | 请求体不正确，如格式不对 |
+    | 401    | 未鉴权                   |
+    | 403    | 操作未授权               |
+    | 404    | 资源未找到               |
+    | 422    | 无法操作                 |
+
+    错误的状态码通常带有错误说明在 body 里，格式如下：
+    code返回或者为1，代表有错误。0代表成功
+
+    ```json
+    {
+      "code": 1,
+      "requestId": "cb8418ea-17fe-11ea-a977-f018982d322a",
+      "msg": "server error, qrCodeUrl is empty",
+      "data": null
+    }
+    ```
+    ```json
+    {
+      "code": 0,
+      "requestId": "52b94e5c-17ff-11ea-b3e2-f018982d322a",
+      "msg": "success",
+      "data": {
+      }
+    }
+    ```
+
+    | 字段名  | 说明           | 必出现 | 示例  |
+    | ------- | -------------- | ------ | ------ |
+    | code    | 错误代码       | 是     | 1失败，0成功 |
+    | msg | 错误的详细说明 | 是     | success |
+    |requestId| 请求的UUID     | 是    | "52b94e5c-17ff-11ea-b3e2-f018982d322a"|
+    | data | 数据 | 是 | obj|
+
+    ## Authorize
+    暂无auth校验
+
+  contact:
+    email: pangxieke@126.com
+  version: "v1"
+
+servers:
+  - description: 测试环境
+    url: 'https://xxx.com/temperature/v1'
+  - description: 正式环境
+    url: 'https://xxx.com/temperature/v1'
+
+paths:
+  /data:
+    post:
+      tags:
+        - 数据上传
+      summary: 数据上传
+      description: 数据上传 头像及温度数据上传
+      parameters:
+        - $ref: '#/components/parameters/FaceImage'
+        - $ref: '#/components/parameters/Num'
+        - $ref: '#/components/parameters/SN'
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Create'
+
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+  /image:
+    post:
+      tags:
+        - 图片
+      summary: 图片上传签名
+      description: 图片上传签名
+      parameters:
+        - $ref: '#/components/parameters/SN'
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/ImageCreate'
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+  /send:
+    post:
+      tags:
+        - 用户
+      summary: 发送短信验证码
+      description: 发送短信验证码
+      parameters:
+        - $ref: '#/components/parameters/Mobile'
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+  /login:
+    post:
+      tags:
+        - 用户
+      summary: 用户登录
+      description: 用户登录
+      parameters:
+        - $ref: '#/components/parameters/Mobile'
+        - $ref: '#/components/parameters/Code'
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Login'
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+  /user:
+    get:
+      tags:
+        - 用户
+      summary: 用户信息
+      description: 用户信息
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/UserInfo'
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+  /list:
+    post:
+      tags:
+        - 用户
+      summary: 体温记录
+      description: 登录后查看体温记录
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+      responses:
+        200:
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResp'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/RecordList'
+        404:
+          $ref: '#/components/responses/NotFound'
+      security:
+        - authorization: []
+
+components:
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        default: 0
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 24
+    SyncId:
+      name: sync_id
+      description: 形象同步ID
+      in: path
+      schema:
+        type: string
+      required: true
+    FaceId:
+      name: face_id
+      description: 人脸ID
+      in: path
+      schema:
+        type: integer
+      required: true
+    ID:
+      name: id
+      description: id
+      in: query
+      schema:
+        type: integer
+    imageId:
+      name: imageId
+      description: id
+      in: path
+      schema:
+        type: integer
+      required: true
+    status:
+      name: status
+      description: 状态
+      in: query
+      schema:
+        type: integer
+      required: true
+    Origin:
+      name: origin
+      description: 来源,1首页，6退出
+      in: path
+      schema:
+        type: integer
+      required: true
+      example: 6
+    FaceImage:
+      name: face_image
+      description: 头像图片
+      in: query
+      schema:
+        type: string
+      required: true
+      example: "http://1.png"
+    Num:
+      name: num
+      description: 体温数据，float
+      in: query
+      schema:
+        type: number
+      required: true
+      example: "36.8"
+    SN:
+      name: sn
+      description: 设备sn码
+      in: query
+      schema:
+        type: string
+      required: true
+      example: "sn001"
+    Mobile:
+      name: mobile
+      description: 手机号码
+      in: query
+      schema:
+        type: string
+      required: true
+      example: "13800138000"
+    Code:
+      name: code
+      description: 手机验证码
+      in: query
+      schema:
+        type: string
+      required: true
+      example: "123456"
+    StartTime:
+      name: start_time
+      description: 开始时间戳（秒）
+      in: query
+      schema:
+        type: integer
+      required: false
+      example: 1585726240
+    EndTime:
+      name: end_time
+      description: 结束时间戳（秒）
+      in: query
+      schema:
+        type: string
+      required: false
+      example: 1585726245
+  schemas:
+    Error:
+      properties:
+        message:
+          type: string
+          description: 错误消息
+        code:
+          type: integer
+          description: 错误码，主要用于提示方案
+      required:
+        - message
+        - code
+    Paging:
+      properties:
+        total:
+          type: integer
+          description: 符合查询条件的总数
+          example: 1
+        offset:
+          type: integer
+          description: 当前结果的索引偏移
+          example: 0
+      required:
+        - total
+        - offset
+    SuccessResp:
+      properties:
+        code:
+          type: integer
+          description: ""
+          example: 1
+        requestId:
+          type: string
+          description: "requestId"
+          example: "a7eea9aa-1bf4-11ea-a5a7-00e04c360c4e"
+        msg:
+          type: string
+          example: "success"
+        # data:
+        #   type: string
+        #   example: "obj"
+      required:
+        - code
+        - requestId
+        - msg
+        - data
+    Create:
+      properties:
+        id:
+          type: integer
+          description: "记录ID"
+          example: 1
+        name:
+          type: string
+          description: "用户姓名"
+          example: 张三
+        type:
+          type: integer
+          description: "用户类型，1为已注册用户，0为未注册用户"
+          example: 0
+        now_time:
+          type: integer
+          description: "当前时间戳"
+          example: 1583985532
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/list'
+      required:
+        - id
+    list:
+      properties:
+        id:
+          type: integer
+          description: "记录ID"
+          example: 1
+        num:
+          type: number
+          description: "温度记录"
+          example: 37.1
+        time:
+          type: integer
+          description: "时间戳"
+          example: 1583985532
+      required:
+        - id
+    sn:
+      type: string
+      description: 设备序列号
+      example: "sn001"
+    ImageCreate:
+      allOf:
+        - properties:
+            id:
+              type: integer
+              description: 图片ID
+              example: 1
+            putUrl:
+              type: string
+              description: 上传地址
+              example: "https://***.aliyuncs.com/temperature/dev/preview.png?Expires=1583729226&OSSAccessKeyId=***&Signature=***"
+    Login:
+      allOf:
+        - properties:
+            token:
+              type: string
+              description: token,jwt加密字符串
+              example: "eyJhbGciOiJIUR5cCI6IkpXVCJ9.eyJleHAiOjE1ODY1Nzc3M6InRlbXBlcmF0dXJlIiwidWlkIjoiMTM1MTAwODI0NzMifQ.hfJKJC7lo-tCLyC235EykDe136GtHA"
+            username:
+              type: string
+              description: 用户姓名
+              example: "张三"
+            company:
+              type: string
+              description: 公司名称
+              example: "***"
+    UserInfo:
+      allOf:
+        - properties:
+            username:
+              type: string
+              description: 用户姓名
+              example: "张三"
+            company:
+              type: string
+              description: 公司名称
+              example: "***"
+    RecordList:
+      properties:
+        - $ref: '#/components/schemas/list'
+        - $ref: '#/components/schemas/list'
+  responses:
+    NoContent:
+      description: 操作成功
+    Unauthorized:
+      description: 鉴权失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Authorization is invalid
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Operation is forbidden
+    NotFound:
+      description: 找不到资源
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: 资源不存在
+            code: 0
+            requestId: "b22f0a74-1689-11ea-8ae6-f018982d322a"
+    UnprocessableEntity:
+      description: 无法处理的请求
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 1
+            message: 操作失败的具体原因
+  securitySchemes:
+    authorization:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes

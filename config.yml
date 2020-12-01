@@ -1,0 +1,25 @@
+mysql:
+  host: 47.106.177.163
+  port: 3306
+  user:
+  password:
+  db:
+  debug: true
+
+oss:
+  endpoint: "https://oss-cn-shenzhen.aliyuncs.com"
+  access_key_id: ""
+  access_key_secret: ""
+  bucket: ""
+
+baidu:
+  host: https://aip.baidubce.com
+  app_id:
+  app_key:
+
+sms:
+  account: ""
+  password: ""
+
+redis:
+  address: "127.0.0.1:7001,127.0.0.1:7002"
